@@ -1,0 +1,73 @@
+---
+title: "Wrangling Final Project"
+author: "Andrew Graham"
+format:
+  html:
+    toc: true
+    toc-location: left
+    self-contained: true
+jupyter: python3
+---
+
+
+```{python}
+import pandas as pd
+import requests
+
+url = "https://sports.yahoo.com/ncaab/teams/duke/stats/"
+
+response = requests.get(url, verify=False)
+
+tables = pd.read_html(response.text)
+
+print(len(tables))
+df = tables[0]
+print(df.head())
+```
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+
+plt.figure()
+
+plt.scatter(df["Min"], df["Pts"])
+
+for i, name in enumerate(df["Player"]):
+    plt.annotate(name, (df["Min"][i], df["Pts"][i]), fontsize=8)
+
+z = np.polyfit(df["Min"], df["Pts"], 1)
+p = np.poly1d(z)
+plt.plot(df["Min"], p(df["Min"]))
+
+plt.xlabel("Minutes Per Game")
+plt.ylabel("Points Per Game")
+plt.title("Scoring vs Playing Time")
+plt.show()
+```
+```{python}
+plt.figure()
+
+plt.scatter(df["FGA"], df["FG%"])
+
+for i, name in enumerate(df["Player"]):
+    plt.annotate(name, (df["FGA"][i], df["FG%"][i]), fontsize=8)
+
+z = np.polyfit(df["FGA"], df["FG%"], 1)
+p = np.poly1d(z)
+plt.plot(df["FGA"], p(df["FGA"]))
+
+plt.xlabel("Field Goal Attempts")
+plt.ylabel("Field Goal %")
+plt.title("Efficiency vs Usage")
+plt.show()
+```
+```{python}
+df["Underrated_Score_v2"] = (
+    (df["Pts"] * 0.4) +
+    (df["Reb"] * 0.2) +
+    (df["Ast"] * 0.2) +
+    (df["Stl"] * 0.1) +
+    (df["Blk"] * 0.1)
+) * (df["FG%"] / 50) / df["Min"]
+df[["Player", "Underrated_Score"]]
+```
